@@ -1,0 +1,80 @@
+﻿@page "/gastos"
+@inject GastosServices GastosService
+@inject CategoriasService CategoriasServices
+<h1>Registro de Gastos</h1>
+
+<EditForm Model="@novoGasto"
+          OnValidSubmit="@OnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="mb-3">
+        <label>Descrição</label>
+        <InputText @bind-Value="novoGasto.Descricao" class="form-control" />
+        <ValidationMessage For="@(() => novoGasto.Descricao)" />
+
+    </div>
+
+    <div class="mb-3">
+        <label>Valor</label>
+        <InputNumber @bind-Value="novoGasto.Valor" class="form-control" />
+        <ValidationMessage For="@(() => novoGasto.Valor)" />
+
+    </div>
+
+    <div class="mb-3">
+        <label>Categoria</label>
+        <select @bind="novoGasto.CategoriaId" class="form-control">
+            <option value="1">Sem Categoria</option>
+            @foreach (var categoria in categorias.Where(c => c.Id != 1))
+            {
+                <option value="@categoria.Id">@categoria.Nome</option>
+            }
+        </select>
+        <ValidationMessage For="@(() => novoGasto.CategoriaId)" />
+    </div>
+
+    <div class="mb-3">
+        <label>Data</label>
+        <InputDate @bind-Value="novoGasto.Data" class="form-control" />
+        <ValidationMessage For="@(() => novoGasto.CategoriaId)" />
+
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar</button>
+</EditForm>
+
+<h4>Gastos Registrados</h4>
+<ul class="list-group">
+    @foreach (var gasto in listaGastos)
+    {
+        <li class="list-group-item">@gasto.Data.ToShortDateString() - @gasto.Descricao - @gasto.Valor.ToString("C") - @gasto.CategoriaNome</li>
+    }
+</ul>
+
+
+@code {
+    private List<GastoResponseDTO> listaGastos = new();
+    private List<CategoriaResponseDTO> categorias = new();
+    private GastoRequestDTO novoGasto = new() { Data = DateTime.Now };
+    private string Result = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        categorias = await CategoriasServices.GetCategorias();
+        listaGastos = await GastosService.GetGastos();
+        StateHasChanged();
+    }
+
+    private async Task OnValidSubmit()
+    {
+        await SalvarGasto();
+    }
+
+    private async Task SalvarGasto()
+    {
+        await GastosService.AddGasto(novoGasto);
+        listaGastos = await GastosService.GetGastos();
+        novoGasto = new() { Data = DateTime.Now };
+        Result = "Novo gasto cadastrado!";
+    }
+}

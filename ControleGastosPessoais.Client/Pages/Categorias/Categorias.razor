@@ -1,0 +1,59 @@
+﻿@page "/categorias"
+@inject CategoriasService CategoriasService
+
+
+
+
+<h3>Cadastro de Categorias</h3>
+
+<EditForm Model="@novaCategoria"
+          OnValidSubmit="@OnValidSubmit">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <div class="mb-3">
+        <label>Nome da Categoria</label>
+        <InputText @bind-Value="novaCategoria.Nome" />
+        <ValidationMessage For="@(() => novaCategoria.Nome)" />
+
+    </div>
+
+
+    <button type="submit">Salvar</button>
+</EditForm>
+
+
+<h4>Categorias Cadastradas</h4>
+<ul>
+    @foreach (var categoria in categorias)
+    {
+        <li>@categoria.Nome</li>
+    }
+</ul>
+
+
+
+@code {
+    private List<CategoriaResponseDTO> categorias = new();
+    private CategoriaRequestDTO novaCategoria = new();
+    private string Result = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categorias = await CategoriasService.GetCategorias();
+        StateHasChanged();
+    }
+
+    public async Task OnValidSubmit()
+    {
+        await SalvarCategoria();
+        Result = "Categoria salva com sucesso!";
+
+    }
+
+    private async Task SalvarCategoria()
+    {
+        await CategoriasService.AddCategoria(novaCategoria);
+        categorias = await CategoriasService.GetCategorias();
+        novaCategoria = new();
+
+    }
+}
