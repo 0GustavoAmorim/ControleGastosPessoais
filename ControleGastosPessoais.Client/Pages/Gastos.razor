@@ -1,62 +1,72 @@
 ﻿@page "/gastos"
 @inject GastosServices GastosService
 @inject CategoriasService CategoriasServices
-<h1>Registro de Gastos</h1>
+@inject ISnackbar SnackBar
+
+<MudText Typo="Typo.h3" Align="Align.Center">Registrar Gastos</MudText>
 
 <EditForm Model="@novoGasto"
           OnValidSubmit="@OnValidSubmit">
     <DataAnnotationsValidator />
 
-    <div class="mb-3">
-        <label>Descrição</label>
-        <InputText @bind-Value="novoGasto.Descricao" class="form-control" />
-        <ValidationMessage For="@(() => novoGasto.Descricao)" />
+    <MudGrid>
+        <MudItem xs="6">
+            <MudTextField Label="Descrição" Class="mt-3" HelperText="Max. 50 caracteres"
+                          @bind-Value="novoGasto.Descricao" For="@(() => novoGasto.Descricao)" />
+        </MudItem>
 
-    </div>
+        <MudItem xs="6">
+            <MudSelect @bind-Value="novoGasto.CategoriaId" Label="Categoria" Class="mt-3" Placeholder="Selecione a Categoria" AdornmentIcon="fa-solid fa-bookmark">
+                <MudSelectItem Value="1">Sem Categoria</MudSelectItem>
+                @foreach (var categoria in categorias.Where(c => c.Id != 1))
+                {
+                    <MudSelectItem Value="@categoria.Id">@categoria.Nome</MudSelectItem>
+                }
+            </MudSelect>
+            <ValidationMessage For="@(() => novoGasto.CategoriaId)" />
+        </MudItem>
+        
+        <MudItem xs="6">
+            <MudNumericField Label="Valor" HelperText="Não pode ser 0(zero)"
+                             @bind-Value="novoGasto.Valor" For="@(() => novoGasto.Valor)" />
+        </MudItem>
 
-    <div class="mb-3">
-        <label>Valor</label>
-        <InputNumber @bind-Value="novoGasto.Valor" class="form-control" />
-        <ValidationMessage For="@(() => novoGasto.Valor)" />
+        <MudItem xs="6">
+            <MudDatePicker Label="Basic example" @bind-Date="novoGasto.Data" />
 
-    </div>
+            @* <MudTextField @bind-Value="novoGasto.Data" Format="dd/MM/yyyy" Label="Data" Variant="Variant.Outlined" Margin="Margin.Dense" /> *@
+        </MudItem>
 
-    <div class="mb-3">
-        <label>Categoria</label>
-        <select @bind="novoGasto.CategoriaId" class="form-control">
-            <option value="1">Sem Categoria</option>
-            @foreach (var categoria in categorias.Where(c => c.Id != 1))
-            {
-                <option value="@categoria.Id">@categoria.Nome</option>
-            }
-        </select>
-        <ValidationMessage For="@(() => novoGasto.CategoriaId)" />
-    </div>
-
-    <div class="mb-3">
-        <label>Data</label>
-        <InputDate @bind-Value="novoGasto.Data" class="form-control" />
-        <ValidationMessage For="@(() => novoGasto.CategoriaId)" />
-
-    </div>
-
-    <button type="submit" class="btn btn-primary">Salvar</button>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Salvar</MudButton>
+    </MudGrid>
 </EditForm>
 
-<h4>Gastos Registrados</h4>
-<ul class="list-group">
-    @foreach (var gasto in listaGastos)
-    {
-        <li class="list-group-item">@gasto.Data.ToShortDateString() - @gasto.Descricao - @gasto.Valor.ToString("C") - @gasto.CategoriaNome</li>
-    }
-</ul>
+<MudText Typo="Typo.h5" Class="mt-5">Lista de Gastos</MudText>
+
+<MudTable @ref="@_table" Items="@listaGastos" RowsPerPage="4" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Descrição</MudTh>
+        <MudTh>Valor</MudTh>
+        <MudTh>Categoria</MudTh>
+        <MudTh>Data</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nr">@context.Descricao</MudTd>
+        <MudTd DataLabel="Sign">@context.Valor</MudTd>
+        <MudTd DataLabel="Name">@context.CategoriaNome</MudTd>
+        <MudTd DataLabel="Position">@context.Data</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudPagination SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" />
+    </PagerContent>
+</MudTable>
 
 
 @code {
+    private MudTable<GastoResponseDTO> _table;
     private List<GastoResponseDTO> listaGastos = new();
     private List<CategoriaResponseDTO> categorias = new();
     private GastoRequestDTO novoGasto = new() { Data = DateTime.Now };
-    private string Result = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,6 +85,12 @@
         await GastosService.AddGasto(novoGasto);
         listaGastos = await GastosService.GetGastos();
         novoGasto = new() { Data = DateTime.Now };
-        Result = "Novo gasto cadastrado!";
+        SnackBar.Configuration.PositionClass = "Top-Center";
+        SnackBar.Add("Gasto Cadastrado!!", Severity.Success);
+    }
+
+    private void PageChanged(int i)
+    {
+        _table.NavigateTo(i - 1);
     }
 }

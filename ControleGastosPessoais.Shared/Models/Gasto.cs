@@ -18,7 +18,7 @@ public class Gasto
     public decimal Valor { get; set; }
 
     [Required]
-    public DateTime Data { get; set; } = DateTime.Now;
+    public DateTime? Data { get; set; } = DateTime.Now;
 
     [Required]
     public int CategoriaId { get; set; }

@@ -14,9 +14,7 @@ namespace ControleGastosPessoais.Shared.DTOs.Gasto
         public decimal Valor { get; set; }
 
         [Required(ErrorMessage = "A data é obrigatória.")]
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}")]
-        public DateTime Data { get; set; } = DateTime.Now;
+        public DateTime? Data { get; set; } = DateTime.Now;
 
         [Required(ErrorMessage = "Informar Categoria do gasto é obrigatória.", AllowEmptyStrings = false)]
         public int CategoriaId { get; set; }
