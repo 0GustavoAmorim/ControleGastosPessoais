@@ -17,7 +17,6 @@
 
         <MudItem xs="6">
             <MudSelect @bind-Value="novoGasto.CategoriaId" Label="Categoria" Class="mt-3" Placeholder="Selecione a Categoria" AdornmentIcon="fa-solid fa-bookmark">
-                <MudSelectItem Value="1">Sem Categoria</MudSelectItem>
                 @foreach (var categoria in categorias.Where(c => c.Id != 1))
                 {
                     <MudSelectItem Value="@categoria.Id">@categoria.Nome</MudSelectItem>
@@ -25,45 +24,57 @@
             </MudSelect>
             <ValidationMessage For="@(() => novoGasto.CategoriaId)" />
         </MudItem>
-        
+
         <MudItem xs="6">
             <MudNumericField Label="Valor" HelperText="Não pode ser 0(zero)"
                              @bind-Value="novoGasto.Valor" For="@(() => novoGasto.Valor)" />
         </MudItem>
 
         <MudItem xs="6">
-            <MudDatePicker Label="Basic example" @bind-Date="novoGasto.Data" />
-
-            @* <MudTextField @bind-Value="novoGasto.Data" Format="dd/MM/yyyy" Label="Data" Variant="Variant.Outlined" Margin="Margin.Dense" /> *@
+            <MudDatePicker Label="Data" @bind-Date="novoGasto.Data" />
         </MudItem>
 
         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Salvar</MudButton>
     </MudGrid>
 </EditForm>
 
-<MudText Typo="Typo.h5" Class="mt-5">Lista de Gastos</MudText>
+<MudText Typo="Typo.h5" Class="mt-5">Gastos</MudText>
 
 <MudTable @ref="@_table" Items="@listaGastos" RowsPerPage="4" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
     <HeaderContent>
+        <MudTh>Id</MudTh>
         <MudTh>Descrição</MudTh>
         <MudTh>Valor</MudTh>
         <MudTh>Categoria</MudTh>
         <MudTh>Data</MudTh>
+        <MudTh>Editar</MudTh>
+        <MudTh>Excluir</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Nr">@context.Descricao</MudTd>
-        <MudTd DataLabel="Sign">@context.Valor</MudTd>
-        <MudTd DataLabel="Name">@context.CategoriaNome</MudTd>
-        <MudTd DataLabel="Position">@context.Data</MudTd>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Descrição">@context.Descricao</MudTd>
+        <MudTd DataLabel="Valor">@context.Valor</MudTd>
+        <MudTd DataLabel="Categoria">@context.CategoriaNome</MudTd>
+        <MudTd DataLabel="Data">@context.Data</MudTd>
+        <MudTd>
+            <MudButton>
+                <i class="fa-solid fa-pen-to-square" style="color: #FFD43B;"></i>
+            </MudButton>
+        </MudTd>
+        <MudTd>
+            <MudButton>
+               <i class="fa-solid fa-trash" style="color: #ff0033;"></i>
+            </MudButton>
+        </MudTd>
     </RowTemplate>
     <PagerContent>
-        <MudPagination SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" />
+        <MudPagination SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4 align-center d-flex justify-center" />
     </PagerContent>
 </MudTable>
 
 
 @code {
-    private MudTable<GastoResponseDTO> _table;
+    private MudTable<GastoResponseDTO>? _table;
     private List<GastoResponseDTO> listaGastos = new();
     private List<CategoriaResponseDTO> categorias = new();
     private GastoRequestDTO novoGasto = new() { Data = DateTime.Now };
@@ -88,6 +99,20 @@
         SnackBar.Configuration.PositionClass = "Top-Center";
         SnackBar.Add("Gasto Cadastrado!!", Severity.Success);
     }
+
+    // private async Task EditarGasto(int id)
+    // {
+    //     // await GastosService.EditGasto(id);
+    //     SnackBar.Configuration.PositionClass = "Top-Center";
+    //     SnackBar.Add("Editar Gasto", Severity.Info);
+    // }
+
+    // private async Task ExcluirGasto(int id)
+    // {
+    //     // await GastosService.DeleteGasto(id);
+    //     SnackBar.Configuration.PositionClass = "Top-Center";
+    //     SnackBar.Add("Excluir Gasto", Severity.Error);
+    // }
 
     private void PageChanged(int i)
     {

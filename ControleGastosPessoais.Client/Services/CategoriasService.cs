@@ -26,4 +26,29 @@ public class CategoriasService
             await GetCategorias();
         }
     }
+
+    public async Task UpdateCategoria(int categoriaParaExcluir, int novaCategoriaId)
+    {
+        var response = await _http.PutAsJsonAsync($"api/categorias/{categoriaParaExcluir}/update-gastos/{novaCategoriaId}", new {});
+        if (response.IsSuccessStatusCode)
+        {
+            await GetCategorias();
+        }
+    }
+
+    public async Task DeleteCategoria(int id)
+    {
+        var response = await _http.DeleteAsync($"api/categorias/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            await GetCategorias();
+        }
+    }
+
+    public async Task<bool> CategoriaTemGastos(int id)
+    {
+        var response = await _http.GetAsync($"api/categorias/{id}/gastos");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<bool>();
+    }
 }

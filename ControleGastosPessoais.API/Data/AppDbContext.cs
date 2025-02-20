@@ -15,7 +15,7 @@ namespace ControleGastosPessoais.API.Data
         {
             modelBuilder.Entity<Gasto>()
                 .HasOne(g => g.Categoria)
-                .WithMany()
+                .WithMany(c => c.Gastos)
                 .HasForeignKey(g => g.CategoriaId)
                 .OnDelete(DeleteBehavior.Restrict);
         }

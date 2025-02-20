@@ -19,7 +19,7 @@ public class GastosServices
 
     public async Task AddGasto(GastoRequestDTO gastoDTO)
     {
-        var response = await _http.PostAsJsonAsync("https://localhost:7085/api/gastos", gastoDTO);
+        var response = await _http.PostAsJsonAsync("api/gastos", gastoDTO);
 
         if (!response.IsSuccessStatusCode)
         {

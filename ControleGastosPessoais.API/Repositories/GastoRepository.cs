@@ -28,6 +28,7 @@ namespace ControleGastosPessoais.API.Repositories
                     Data = g.Data,
                     CategoriaNome = g.Categoria.Nome
                 })
+                .OrderByDescending(g => g.Id)
                 .ToListAsync();
 
             return gastos;

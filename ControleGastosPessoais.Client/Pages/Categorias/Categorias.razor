@@ -1,40 +1,70 @@
 ﻿@page "/categorias"
 @inject CategoriasService CategoriasService
+@inject ISnackbar SnackBar
 
-
-
-
-<h3>Cadastro de Categorias</h3>
+<MudText Typo="Typo.h3" Align="Align.Center">Registrar Categoria</MudText>
 
 <EditForm Model="@novaCategoria"
           OnValidSubmit="@OnValidSubmit">
-    <DataAnnotationsValidator></DataAnnotationsValidator>
-    <div class="mb-3">
-        <label>Nome da Categoria</label>
-        <InputText @bind-Value="novaCategoria.Nome" />
-        <ValidationMessage For="@(() => novaCategoria.Nome)" />
-
-    </div>
-
-
-    <button type="submit">Salvar</button>
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12">
+            <MudTextField Label="Nome da Categoria" Class="mt-3" HelperText="Max. 50 caracteres" 
+                          @bind-Value="novaCategoria.Nome" For="@(() => novaCategoria.Nome)"/>
+        </MudItem>
+            
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Salvar</MudButton>
+    </MudGrid>
 </EditForm>
 
+<MudText Typo="Typo.h5" Class="mt-5">Categorias</MudText>
 
-<h4>Categorias Cadastradas</h4>
-<ul>
-    @foreach (var categoria in categorias)
-    {
-        <li>@categoria.Nome</li>
-    }
-</ul>
+<MudTable @ref="@_table" Items="@categorias.Where(c => c.Id != 1)" RowsPerPage="4" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Categoria</MudTh>
+        <MudTh>Editar</MudTh>
+        <MudTh>Excluir</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Nome">@context.Nome</MudTd>
+        <MudTd DataLabel="Editar">
+            <i class="fa-solid fa-pen-to-square" style="color: #FFD43B;"></i>
+        </MudTd>
+        <MudTd DataLabel="Excluir" @onclick="() => ExcluirCategoria(context.Id)">
+            <i class="fa-solid fa-trash" style="color: #ff0033;"></i>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudPagination SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="d-flex justify-center pa-4 align-center" />
+    </PagerContent>
+</MudTable>
 
-
+<MudDialog @bind-Visible="mostrarAlerta">
+    <DialogContent>
+        <MudText Typo="Typo.h6">Você deseja atualizar a categoria dos gastos para uma nova categoria antes de excluir?</MudText>
+        <MudSelect @bind-Value="novaCategoriaId" Label="Nova categoria" Class="mt-3"> 
+            @foreach(var categoria in categorias.Where(c => c.Id != 1))
+            {
+                <MudSelectItem Value="@categoria.Id">@categoria.Nome</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmarExclusao">Sim</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ConfirmarExclusao">Não</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     private List<CategoriaResponseDTO> categorias = new();
     private CategoriaRequestDTO novaCategoria = new();
-    private string Result = string.Empty;
+    private MudTable<CategoriaResponseDTO>? _table;
+
+    private bool mostrarAlerta = false;
+    private int categoriaParaExcluir;
+    private int novaCategoriaId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,7 +75,6 @@
     public async Task OnValidSubmit()
     {
         await SalvarCategoria();
-        Result = "Categoria salva com sucesso!";
 
     }
 
@@ -55,5 +84,42 @@
         categorias = await CategoriasService.GetCategorias();
         novaCategoria = new();
 
+    }
+
+    private async Task ExcluirCategoria(int id)
+    {
+        bool temGastos = await CategoriasService.CategoriaTemGastos(id);
+        if (temGastos)
+        {
+            categoriaParaExcluir = id;
+            mostrarAlerta = true;
+        }
+        else
+        {
+            await CategoriasService.DeleteCategoria(id);
+            categorias = await CategoriasService.GetCategorias();
+            SnackBar.Add("Categoria excluída com sucesso!", Severity.Success);
+        }
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (novaCategoriaId > 0)
+        {
+            await CategoriasService.UpdateCategoria(categoriaParaExcluir, novaCategoriaId);
+        }
+        else
+        {
+            await CategoriasService.UpdateCategoria(categoriaParaExcluir, 1);
+        }
+        await CategoriasService.DeleteCategoria(categoriaParaExcluir);
+        mostrarAlerta = false;
+        categorias = await CategoriasService.GetCategorias();
+        SnackBar.Add("Categoria excluída com sucesso!", Severity.Success);
+    }
+
+    private void PageChanged(int i)
+    {
+        _table.NavigateTo(i - 1);
     }
 }
