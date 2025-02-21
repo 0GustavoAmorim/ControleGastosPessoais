@@ -29,7 +29,7 @@
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
         <MudTd DataLabel="Nome">@context.Nome</MudTd>
-        <MudTd DataLabel="Editar">
+        <MudTd DataLabel="Editar" @onclick="() => ExibirModalEditarCategoria(context)">
             <i class="fa-solid fa-pen-to-square" style="color: #FFD43B;"></i>
         </MudTd>
         <MudTd DataLabel="Excluir" @onclick="() => ExcluirCategoria(context.Id)">
@@ -41,7 +41,7 @@
     </PagerContent>
 </MudTable>
 
-<MudDialog @bind-Visible="mostrarAlerta">
+<MudDialog @bind-Visible="exibeModalExcluir">
     <DialogContent>
         <MudText Typo="Typo.h6">Você deseja atualizar a categoria dos gastos para uma nova categoria antes de excluir?</MudText>
         <MudSelect @bind-Value="novaCategoriaId" Label="Nova categoria" Class="mt-3"> 
@@ -57,14 +57,31 @@
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="exibeModalEditar">
+    <DialogContent>
+        <MudText Typo="Typo.h6">Atualizar categoria</MudText>
+        <MudItem xs="12">
+            <MudTextField Label="Nome da Categoria" Class="mt-3" HelperText="Max. 50 caracteres"
+                          @bind-Value="categoriaParaEditar.Nome" For="@(() => categoriaParaEditar.Nome)" />
+        </MudItem>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmaUpdate">Sim</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => exibeModalEditar = false">Não</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private List<CategoriaResponseDTO> categorias = new();
     private CategoriaRequestDTO novaCategoria = new();
+    private CategoriaRequestDTO categoriaParaEditar = new();
     private MudTable<CategoriaResponseDTO>? _table;
 
-    private bool mostrarAlerta = false;
+    private bool exibeModalExcluir = false;
+    private bool exibeModalEditar = false;
     private int categoriaParaExcluir;
     private int novaCategoriaId;
+    private int categoriaId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,7 +109,7 @@
         if (temGastos)
         {
             categoriaParaExcluir = id;
-            mostrarAlerta = true;
+            exibeModalExcluir = true;
         }
         else
         {
@@ -106,17 +123,54 @@
     {
         if (novaCategoriaId > 0)
         {
-            await CategoriasService.UpdateCategoria(categoriaParaExcluir, novaCategoriaId);
+            await CategoriasService.UpdateGastosCategoria(categoriaParaExcluir, novaCategoriaId);
         }
         else
         {
-            await CategoriasService.UpdateCategoria(categoriaParaExcluir, 1);
+            await CategoriasService.UpdateGastosCategoria(categoriaParaExcluir, 1);
         }
         await CategoriasService.DeleteCategoria(categoriaParaExcluir);
-        mostrarAlerta = false;
+        exibeModalExcluir = false;
         categorias = await CategoriasService.GetCategorias();
         SnackBar.Add("Categoria excluída com sucesso!", Severity.Success);
     }
+
+
+    private void ExibirModalEditarCategoria(CategoriaResponseDTO categoria)
+    {
+        categoriaId = categoria.Id;
+        categoriaParaEditar.Nome = categoria.Nome;
+        exibeModalEditar = true;
+    }
+
+    private async Task ConfirmaUpdate()
+    {
+        if (string.IsNullOrWhiteSpace(categoriaParaEditar.Nome))
+        {
+            SnackBar.Add("O nome da categoria não pode estar vazio!", Severity.Warning);
+            return;
+        }
+        try
+        {
+            await CategoriasService.UpdateCategoria(categoriaId, categoriaParaEditar);
+            var categoriaEditada = categorias.FirstOrDefault(c => c.Id == categoriaId);
+            if (categoriaEditada != null)
+            {
+                categoriaEditada.Nome = categoriaParaEditar.Nome;
+            }
+            
+            SnackBar.Add("Categoria atualizada com sucesso!", Severity.Success);
+            exibeModalEditar = false;
+
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Erro ao atualizar a categoria: {ex.Message}", Severity.Error);
+        }
+
+    }
+
+
 
     private void PageChanged(int i)
     {

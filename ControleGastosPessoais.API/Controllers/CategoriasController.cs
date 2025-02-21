@@ -53,7 +53,7 @@ public class CategoriasController : ControllerBase
         return Ok("Categoria cadastrada com sucesso!");
     }
 
-    [HttpPut("{id}"),]
+    [HttpPut("{id}")]
     public async Task<ActionResult> UpdateCategoria(int id, CategoriaRequestDTO categoria)
     {
         bool categoriaAtualizada = await _categoriaRepository.UpdateCategoria(id, categoria);
@@ -61,7 +61,6 @@ public class CategoriasController : ControllerBase
             return NotFound($"Categoria com ID {id} não encontrada.");
 
         return Ok("Categoria atualizada com sucesso!");
-
     }
 
     [HttpPut("{id}/update-gastos/{novaCategoriaId}")]

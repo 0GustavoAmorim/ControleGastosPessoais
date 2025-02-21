@@ -27,7 +27,16 @@ public class CategoriasService
         }
     }
 
-    public async Task UpdateCategoria(int categoriaParaExcluir, int novaCategoriaId)
+    public async Task UpdateCategoria(int id, CategoriaRequestDTO categoria)
+    {
+        var response = await _http.PutAsJsonAsync($"api/categorias/{id}", categoria);
+        if (response.IsSuccessStatusCode)
+        {
+            await GetCategorias();
+        }
+    }
+
+    public async Task UpdateGastosCategoria(int categoriaParaExcluir, int novaCategoriaId)
     {
         var response = await _http.PutAsJsonAsync($"api/categorias/{categoriaParaExcluir}/update-gastos/{novaCategoriaId}", new {});
         if (response.IsSuccessStatusCode)
