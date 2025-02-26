@@ -17,13 +17,15 @@
 
         <MudItem xs="6">
             <MudSelect @bind-Value="novoGasto.CategoriaId" Label="Categoria" Class="mt-3" Placeholder="Selecione a Categoria" AdornmentIcon="fa-solid fa-bookmark">
-                @foreach (var categoria in categorias.Where(c => c.Id != 1))
+                <MudSelectItem Value="0">Selecione uma categoria</MudSelectItem>
+                @foreach (var categoria in categorias.Where(c => c.Id != 1)) // Ocultamos a categoria 1
                 {
                     <MudSelectItem Value="@categoria.Id">@categoria.Nome</MudSelectItem>
                 }
             </MudSelect>
             <ValidationMessage For="@(() => novoGasto.CategoriaId)" />
         </MudItem>
+
 
         <MudItem xs="6">
             <MudNumericField Label="Valor" HelperText="Não pode ser 0(zero)"
@@ -57,13 +59,13 @@
         <MudTd DataLabel="Categoria">@context.CategoriaNome</MudTd>
         <MudTd DataLabel="Data">@context.Data</MudTd>
         <MudTd>
-            <MudButton>
+            <MudButton @onclick="() => ExibirModalEditarGasto(context)">
                 <i class="fa-solid fa-pen-to-square" style="color: #FFD43B;"></i>
             </MudButton>
         </MudTd>
         <MudTd>
-            <MudButton>
-               <i class="fa-solid fa-trash" style="color: #ff0033;"></i>
+            <MudButton @onclick="() => ExibirModalConfirmarExclusao(context.Id)">
+                <i class="fa-solid fa-trash" style="color: #ff0033;"></i>
             </MudButton>
         </MudTd>
     </RowTemplate>
@@ -72,12 +74,66 @@
     </PagerContent>
 </MudTable>
 
+<MudDialog @bind-Visible="exibeModalEditar" MaxWidth="MaxWidth.Medium" FullWidth="true">
+    <DialogContent>
+        <EditForm Model="@gastoParaEditar" OnValidSubmit="ConfirmaUpdate">
+            <DataAnnotationsValidator />
+
+            <MudText Typo="Typo.h6" Class="mb-4"> Editar Gasto</MudText>
+
+            <MudGrid>
+                <MudItem xs="12" Class="mb-3">
+                    <MudTextField Label="Descrição" HelperText="Max. 50 caracteres"
+                                  @bind-Value="gastoParaEditar.Descricao" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" Class="mb-3">
+                    <MudSelect @bind-Value="gastoParaEditar.CategoriaId" Label="Categoria" Class="mt-3" Placeholder="Selecione a Categoria" AdornmentIcon="fa-solid fa-bookmark">
+                        <MudSelectItem Value="0">Selecione uma categoria</MudSelectItem>
+                        @foreach (var categoria in categorias.Where(c => c.Id != 1)) // Ocultamos a categoria 1
+                        {
+                            <MudSelectItem Value="@categoria.Id">@categoria.Nome</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <ValidationMessage For="@(() => gastoParaEditar.CategoriaId)" />
+                </MudItem>
+                <MudItem xs="6" Class="mb-3">
+                    <MudNumericField Label="Valor" HelperText="Não pode ser 0(zero)"
+                                     @bind-Value="gastoParaEditar.Valor" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker Label="Data" @bind-Date="gastoParaEditar.Data" />
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => ConfirmaUpdate()">Atualizar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => exibeModalEditar = false">Cancelar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+<MudDialog @bind-Visible="exibeModalConfirmarExclusao" MaxWidth="MaxWidth.Small" FullWidth="true">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">Tem certeza que deseja excluir este gasto?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmarExclusaoGasto">Excluir</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => exibeModalConfirmarExclusao = false">Cancelar</MudButton>
+    </DialogActions>
+</MudDialog>
+
 
 @code {
     private MudTable<GastoResponseDTO>? _table;
     private List<GastoResponseDTO> listaGastos = new();
     private List<CategoriaResponseDTO> categorias = new();
     private GastoRequestDTO novoGasto = new() { Data = DateTime.Now };
+    private GastoRequestDTO gastoParaEditar = new();
+    private int gastoId;
+    private int gastoParaExcluir;
+    private bool exibeModalEditar = false;
+    private bool exibeModalConfirmarExclusao = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,6 +149,11 @@
 
     private async Task SalvarGasto()
     {
+        if (novoGasto.CategoriaId <= 0)
+        {
+            novoGasto.CategoriaId = 1;
+        }
+
         await GastosService.AddGasto(novoGasto);
         listaGastos = await GastosService.GetGastos();
         novoGasto = new() { Data = DateTime.Now };
@@ -100,19 +161,56 @@
         SnackBar.Add("Gasto Cadastrado!!", Severity.Success);
     }
 
-    // private async Task EditarGasto(int id)
-    // {
-    //     // await GastosService.EditGasto(id);
-    //     SnackBar.Configuration.PositionClass = "Top-Center";
-    //     SnackBar.Add("Editar Gasto", Severity.Info);
-    // }
+    private void ExibirModalEditarGasto(GastoResponseDTO gasto)
+    {
+        gastoId = gasto.Id;
+        gastoParaEditar = new GastoRequestDTO
+            {
+                Descricao = gasto.Descricao,
+                CategoriaId = categorias.FirstOrDefault(c => c.Nome == gasto.CategoriaNome)?.Id ?? 1,
+                Valor = gasto.Valor,
+                Data = gasto.Data
+            };
+        exibeModalEditar = true;
+    }
 
-    // private async Task ExcluirGasto(int id)
-    // {
-    //     // await GastosService.DeleteGasto(id);
-    //     SnackBar.Configuration.PositionClass = "Top-Center";
-    //     SnackBar.Add("Excluir Gasto", Severity.Error);
-    // }
+    private async Task ConfirmaUpdate()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(gastoParaEditar.Descricao) || gastoParaEditar.Valor < 0)
+            {
+                SnackBar.Add("Preencha todos os campos corretamente!", Severity.Warning);
+                return;
+            }
+
+            await GastosService.UpdateGasto(gastoId, gastoParaEditar);
+
+            listaGastos = await GastosService.GetGastos();
+            StateHasChanged();
+
+            SnackBar.Add("Gasto atualizado com sucesso!", Severity.Success);
+            exibeModalEditar = false;
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Erro ao atualizar gasto: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ExibirModalConfirmarExclusao(int gastoId)
+    {
+        gastoParaExcluir = gastoId;
+        exibeModalConfirmarExclusao = true;
+    }
+
+    private async Task ConfirmarExclusaoGasto()
+    {
+        await GastosService.DeleteGasto(gastoParaExcluir);
+        listaGastos = await GastosService.GetGastos();
+        exibeModalConfirmarExclusao = false;
+        SnackBar.Add("Gasto excluído com sucesso!", Severity.Success);
+    }
 
     private void PageChanged(int i)
     {

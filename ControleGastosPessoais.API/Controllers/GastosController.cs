@@ -53,4 +53,32 @@ public class GastosController : ControllerBase
         return Ok("Gasto cadastrado com sucesso!");
     }
 
+    [HttpPut("{id}")]
+    public async Task<ActionResult> UpdateGasto(int id, GastoRequestDTO gasto)
+    {
+        if (gasto == null)
+        {
+            return BadRequest("Os dados do gasto são obrigatórios.");
+        }
+
+        if (gasto.CategoriaId <= 0)
+        {
+            return BadRequest("O ID da categoria é inválido.");
+        }
+
+        bool gastoAtualizado = await _gastoRepository.UpdateGasto(id, gasto);
+        if (!gastoAtualizado)
+        {
+            return NotFound($"Gasto com ID {id} não encontrado.");
+        }
+        return Ok("Gasto atualizado com sucesso!");
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteGasto(int id)
+    {
+        await _gastoRepository.DeleteGasto(id);
+        return Ok("Gasto excluído com sucesso!");
+    }
+
 }

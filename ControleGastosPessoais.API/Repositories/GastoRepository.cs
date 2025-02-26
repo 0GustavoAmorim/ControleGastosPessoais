@@ -65,7 +65,33 @@ namespace ControleGastosPessoais.API.Repositories
             await _context.SaveChangesAsync();
         }
 
-      
 
+        public async Task<bool> UpdateGasto(int id, GastoRequestDTO gasto)
+        {
+            var gastoAtual = await _context.Gastos.FirstOrDefaultAsync(g => g.Id == id);
+
+            if (gastoAtual == null)
+            {
+                return false;
+            }
+
+            gastoAtual.Descricao = gasto.Descricao;
+            gastoAtual.Valor = gasto.Valor;
+            gastoAtual.Data = gasto.Data;
+            gastoAtual.CategoriaId = gasto.CategoriaId;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }   
+
+        public async Task DeleteGasto(int id)
+        {
+            var gasto = await _context.Gastos.FirstOrDefaultAsync(g => g.Id == id);
+            if (gasto != null)
+            {
+                _context.Gastos.Remove(gasto);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

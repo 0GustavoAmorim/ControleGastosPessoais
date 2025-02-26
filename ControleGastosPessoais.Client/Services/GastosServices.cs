@@ -28,4 +28,24 @@ public class GastosServices
         }
     }
 
+    public async Task UpdateGasto(int id, GastoRequestDTO gastoDTO)
+    {
+        var response = await _http.PutAsJsonAsync($"api/gastos/{id}", gastoDTO);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Erro ao atualizar gasto: {error}");
+        }
+    }
+
+    public async Task DeleteGasto(int id)
+    {
+        var response = await _http.DeleteAsync($"api/gastos/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            await GetGastos();
+        }
+    }
+
 }

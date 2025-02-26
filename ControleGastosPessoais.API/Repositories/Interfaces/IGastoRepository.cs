@@ -7,5 +7,8 @@ namespace ControleGastosPessoais.API.Repositories.Interfaces
         Task<List<GastoResponseDTO>> GetGastos();
         Task<GastoResponseDTO> GetGastoById(int id);
         Task AddGasto(GastoRequestDTO gasto);
+        Task<bool> UpdateGasto(int id, GastoRequestDTO gasto);
+        Task DeleteGasto(int id);
     }
+
 }

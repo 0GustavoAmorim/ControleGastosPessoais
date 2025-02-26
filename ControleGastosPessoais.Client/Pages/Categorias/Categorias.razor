@@ -9,10 +9,10 @@
     <DataAnnotationsValidator />
     <MudGrid>
         <MudItem xs="12">
-            <MudTextField Label="Nome da Categoria" Class="mt-3" HelperText="Max. 50 caracteres" 
-                          @bind-Value="novaCategoria.Nome" For="@(() => novaCategoria.Nome)"/>
+            <MudTextField Label="Nome da Categoria" Class="mt-3" HelperText="Max. 50 caracteres"
+                          @bind-Value="novaCategoria.Nome" For="@(() => novaCategoria.Nome)" />
         </MudItem>
-            
+
         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Salvar</MudButton>
     </MudGrid>
 </EditForm>
@@ -41,35 +41,54 @@
     </PagerContent>
 </MudTable>
 
-<MudDialog @bind-Visible="exibeModalExcluir">
+<MudDialog @bind-Visible="exibeModalExcluir" MaxWidth="MaxWidth.Small" FullWidth="true">
     <DialogContent>
-        <MudText Typo="Typo.h6">Você deseja atualizar a categoria dos gastos para uma nova categoria antes de excluir?</MudText>
-        <MudSelect @bind-Value="novaCategoriaId" Label="Nova categoria" Class="mt-3"> 
-            @foreach(var categoria in categorias.Where(c => c.Id != 1))
+        <MudItem xs="12" Class="d-flex justify-content-center">
+            <MudText Typo="Typo.h5" Class="">
+                <i class="fa-solid fa-circle-exclamation fa-2x" style="color: #FFD43B"></i>
+                Esta categoria possui gastos associados.
+            </MudText>
+        </MudItem>
+        <MudDivider Class="mb-12" />
+        <MudText Typo="Typo.h6" Class="mb-4">
+            Deseja atualizar a categoria dos gastos para outra antes de excluir?
+        </MudText>
+
+        <MudSelect @bind-Value="novaCategoriaId" Label="Nova categoria" FullWidth="true">
+            <MudSelectItem Value="0">Selecione uma categoria</MudSelectItem>
+            @foreach (var categoria in categorias.Where(c => c.Id != 1))
             {
                 <MudSelectItem Value="@categoria.Id">@categoria.Nome</MudSelectItem>
             }
         </MudSelect>
     </DialogContent>
+
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmarExclusao">Sim</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ConfirmarExclusao">Não</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmarExclusao">Atualizar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => exibeModalExcluir = false">Cancelar</MudButton>
     </DialogActions>
 </MudDialog>
 
-<MudDialog @bind-Visible="exibeModalEditar">
+
+<MudDialog @bind-Visible="exibeModalEditar" MaxWidth="MaxWidth.Small" FullWidth="true">
     <DialogContent>
-        <MudText Typo="Typo.h6">Atualizar categoria</MudText>
-        <MudItem xs="12">
-            <MudTextField Label="Nome da Categoria" Class="mt-3" HelperText="Max. 50 caracteres"
-                          @bind-Value="categoriaParaEditar.Nome" For="@(() => categoriaParaEditar.Nome)" />
-        </MudItem>
+        <EditForm Model="@categoriaParaEditar" OnValidSubmit="ConfirmaUpdate">
+            <DataAnnotationsValidator />
+
+            <MudText Typo="Typo.h6" Class="mb-4">Atualizar Categoria</MudText>
+
+            <MudItem xs="12" Class="mb-3">
+                <MudTextField Label="Nome da Categoria" HelperText="Max. 50 caracteres"
+                              @bind-Value="categoriaParaEditar.Nome" FullWidth="true" />
+            </MudItem>
+        </EditForm>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmaUpdate">Sim</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => exibeModalEditar = false">Não</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">Atualizar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => exibeModalEditar = false">Cancelar</MudButton>
     </DialogActions>
 </MudDialog>
+
 
 @code {
     private List<CategoriaResponseDTO> categorias = new();
@@ -158,7 +177,7 @@
             {
                 categoriaEditada.Nome = categoriaParaEditar.Nome;
             }
-            
+
             SnackBar.Add("Categoria atualizada com sucesso!", Severity.Success);
             exibeModalEditar = false;
 
@@ -169,7 +188,6 @@
         }
 
     }
-
 
 
     private void PageChanged(int i)
