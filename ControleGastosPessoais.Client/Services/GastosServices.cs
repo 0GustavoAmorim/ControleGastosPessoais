@@ -1,4 +1,5 @@
 ﻿using ControleGastosPessoais.Shared.DTOs.Gasto;
+using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
 
 namespace ControleGastosPessoais.Client.Services;
@@ -6,15 +7,33 @@ namespace ControleGastosPessoais.Client.Services;
 public class GastosServices
 {
     private readonly HttpClient _http;
+    private readonly NavigationManager _nav;
 
-    public GastosServices(HttpClient http)
+    public GastosServices(HttpClient http
+                         ,NavigationManager nav)
     {
         _http = http;
+        _nav = nav;
     }
 
     public async Task<List<GastoResponseDTO>> GetGastos()
     {
-        return await _http.GetFromJsonAsync<List<GastoResponseDTO>>("api/gastos");
+        var response = await _http.GetAsync("api/gastos");
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            _nav.NavigateTo("/notauthorized");
+            return new(); // evita erro após redirecionamento
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            // Aqui você pode logar, exibir mensagem, redirecionar ou só retornar lista vazia
+            return new();
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<List<GastoResponseDTO>>();
+        return result ?? new();
     }
 
     public async Task AddGasto(GastoRequestDTO gastoDTO)

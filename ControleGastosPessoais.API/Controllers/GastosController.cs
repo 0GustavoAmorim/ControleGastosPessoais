@@ -2,6 +2,7 @@
 using ControleGastosPessoais.API.Repositories.Interfaces;
 using ControleGastosPessoais.Shared.DTOs.Gasto;
 using ControleGastosPessoais.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,7 +10,7 @@ namespace ControleGastosPessoais.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class GastosController : ControllerBase
+public class GastosController : BaseController
 {
     private readonly IGastoRepository _gastoRepository;
 
@@ -19,16 +20,22 @@ public class GastosController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<GastoResponseDTO>>> GetGastos()
     {
-        var gastos = await _gastoRepository.GetGastos();
+        var gastos = await _gastoRepository.GetGastos(UserId);
+        if (gastos == null)
+        {
+            return NotFound();
+        }
+
         return Ok(gastos);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<GastoResponseDTO>> GetGastoById(int id)
     {
-        var gasto = await _gastoRepository.GetGastoById(id);
+        var gasto = await _gastoRepository.GetGastoById(id, UserId);
         if (gasto == null)
         {
             return NotFound($"Gasto com ID {id} não encontrado.");
@@ -49,7 +56,7 @@ public class GastosController : ControllerBase
             return BadRequest("O ID da categoria é inválido.");
         }
 
-        await _gastoRepository.AddGasto(gasto);
+        await _gastoRepository.AddGasto(gasto, UserId);
         return Ok("Gasto cadastrado com sucesso!");
     }
 
@@ -66,7 +73,7 @@ public class GastosController : ControllerBase
             return BadRequest("O ID da categoria é inválido.");
         }
 
-        bool gastoAtualizado = await _gastoRepository.UpdateGasto(id, gasto);
+        bool gastoAtualizado = await _gastoRepository.UpdateGasto(id, gasto, UserId);
         if (!gastoAtualizado)
         {
             return NotFound($"Gasto com ID {id} não encontrado.");
@@ -77,7 +84,7 @@ public class GastosController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteGasto(int id)
     {
-        await _gastoRepository.DeleteGasto(id);
+        await _gastoRepository.DeleteGasto(id, UserId);
         return Ok("Gasto excluído com sucesso!");
     }
 

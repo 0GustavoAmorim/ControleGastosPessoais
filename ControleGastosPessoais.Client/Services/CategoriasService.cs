@@ -1,4 +1,5 @@
 ﻿using ControleGastosPessoais.Shared.DTOs.Categoria;
+using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
 
 namespace ControleGastosPessoais.Client.Services;
@@ -6,16 +7,35 @@ namespace ControleGastosPessoais.Client.Services;
 public class CategoriasService
 {
     private readonly HttpClient _http;
+    private readonly NavigationManager _nav;
 
-    public CategoriasService(HttpClient http)
+    public CategoriasService(HttpClient http
+                            ,NavigationManager nav)
     {
         _http = http;
+        _nav = nav;
     }
 
     public async Task<List<CategoriaResponseDTO>> GetCategorias()
     {
-        var categorias = await _http.GetFromJsonAsync<List<CategoriaResponseDTO>>("api/categorias");
-        return categorias ?? new List<CategoriaResponseDTO>();
+        //var categorias = await _http.GetFromJsonAsync<List<CategoriaResponseDTO>>("api/categorias");
+        var response = await _http.GetAsync("api/categorias");
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            _nav.NavigateTo("/notauthorized");
+            return new();
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            // opcional: você pode logar o erro ou redirecionar para uma página de erro
+            return new();
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<List<CategoriaResponseDTO>>();
+        return result ?? new();
+
     }
 
     public async Task AddCategoria(CategoriaRequestDTO novaCategoria)

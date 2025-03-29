@@ -1,0 +1,29 @@
+﻿@page "/"
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+@using Microsoft.AspNetCore.Components.Authorization
+
+<AuthorizeView>
+    <Authorized>
+        @code {
+            protected override async Task OnInitializedAsync()
+            {
+                Nav.NavigateTo("/home");
+            }
+        }
+    </Authorized>
+</AuthorizeView>
+
+<PageTitle>Bem-vindo!</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Typo="Typo.h3" Align="Align.Center">Controle seus gastos de forma inteligente</MudText>
+    <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2 mb-6">
+        Com o nosso app, você pode registrar suas despesas, visualizar dashboards e melhorar sua saúde financeira.
+    </MudText>
+
+    <div class="d-flex justify-center">
+        <MudButton Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/login"))">Entrar</MudButton>
+        <MudButton Color="Color.Secondary" Class="ml-4" OnClick="@(() => Nav.NavigateTo("/register"))">Cadastrar</MudButton>
+    </div>
+</MudContainer>

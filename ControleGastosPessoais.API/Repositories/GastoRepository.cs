@@ -16,10 +16,11 @@ namespace ControleGastosPessoais.API.Repositories
             _context = context;
         }
 
-        public async Task<List<GastoResponseDTO>> GetGastos()
+        public async Task<List<GastoResponseDTO>> GetGastos(string userId)
         {
             var gastos = await _context.Gastos
                 .Include(g => g.Categoria)
+                .Where(g => g.UserId == userId)
                 .Select(g => new GastoResponseDTO
                 {
                     Id = g.Id,
@@ -34,11 +35,11 @@ namespace ControleGastosPessoais.API.Repositories
             return gastos;
         }
 
-        public async Task<GastoResponseDTO> GetGastoById(int id)
+        public async Task<GastoResponseDTO> GetGastoById(int id, string userId)
         {
             var gasto = await _context.Gastos
                 .Include(g => g.Categoria)
-                .FirstOrDefaultAsync(g => g.Id == id);
+                .FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
 
             return gasto != null
                 ? new GastoResponseDTO
@@ -51,14 +52,15 @@ namespace ControleGastosPessoais.API.Repositories
                 } : null;
         }
 
-        public async Task AddGasto(GastoRequestDTO gasto)
+        public async Task AddGasto(GastoRequestDTO gasto, string userId)
         {
             var novoGasto = new Gasto
             {
                 Descricao = gasto.Descricao,
                 Valor = gasto.Valor,
                 Data = gasto.Data,
-                CategoriaId = gasto.CategoriaId
+                CategoriaId = gasto.CategoriaId,
+                UserId = userId
             };
 
             _context.Gastos.Add(novoGasto);
@@ -66,9 +68,9 @@ namespace ControleGastosPessoais.API.Repositories
         }
 
 
-        public async Task<bool> UpdateGasto(int id, GastoRequestDTO gasto)
+        public async Task<bool> UpdateGasto(int id, GastoRequestDTO gasto, string userId)
         {
-            var gastoAtual = await _context.Gastos.FirstOrDefaultAsync(g => g.Id == id);
+            var gastoAtual = await _context.Gastos.FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
 
             if (gastoAtual == null)
             {
@@ -79,14 +81,15 @@ namespace ControleGastosPessoais.API.Repositories
             gastoAtual.Valor = gasto.Valor;
             gastoAtual.Data = gasto.Data;
             gastoAtual.CategoriaId = gasto.CategoriaId;
+            gastoAtual.UserId = userId;
 
             await _context.SaveChangesAsync();
             return true;
         }   
 
-        public async Task DeleteGasto(int id)
+        public async Task DeleteGasto(int id, string userId)
         {
-            var gasto = await _context.Gastos.FirstOrDefaultAsync(g => g.Id == id);
+            var gasto = await _context.Gastos.FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
             if (gasto != null)
             {
                 _context.Gastos.Remove(gasto);
