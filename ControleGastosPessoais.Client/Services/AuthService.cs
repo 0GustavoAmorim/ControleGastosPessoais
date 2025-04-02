@@ -39,43 +39,39 @@ public class AuthService : IAuthService
     {
         var loginAsJson = JsonSerializer.Serialize(loginModel);
 
-        var response = await _httpClient.PostAsync("api/login", // Verifique se a rota está certa
+        var response = await _httpClient.PostAsync("api/login",
             new StringContent(loginAsJson, Encoding.UTF8, "application/json"));
 
         var responseContent = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
-            // Se a resposta não for JSON válido, retorna como mensagem de erro
-            return new LoginResult
+            // Tentamos ler como JSON, caso a API retorne { "successful": false, "error": "..." }
+            try
             {
-                Successful = false,
-                Error = responseContent
-            };
+                var errorResult = JsonSerializer.Deserialize<LoginResult>(responseContent,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                return errorResult ?? new LoginResult { Successful = false, Error = "Erro inesperado." };
+            }
+            catch
+            {
+                // Se não for possível ler como JSON, retorna texto bruto
+                return new LoginResult { Successful = false, Error = "Erro ao realizar login. Verifique seus dados e tente novamente." };
+            }
         }
 
-        LoginResult loginResult;
+        // Se for sucesso, prosseguimos normalmente
+        var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        try
+        if (loginResult == null || string.IsNullOrWhiteSpace(loginResult.Token))
         {
-            loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            }) ?? new LoginResult { Successful = false, Error = "Erro ao processar resposta do servidor." };
-        }
-        catch (JsonException)
-        {
-            return new LoginResult
-            {
-                Successful = false,
-                Error = "Erro ao interpretar a resposta da API. Verifique se o servidor está respondendo corretamente."
-            };
+            return new LoginResult { Successful = false, Error = "Token inválido na resposta do servidor." };
         }
 
         await _localStorage.SetItemAsync("authToken", loginResult.Token);
-
         ((ApiAuthenticationStateProvider)_authenticationStateProvider).MarkUserAsAuthenticated(loginModel.Email);
-
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", loginResult.Token);
 

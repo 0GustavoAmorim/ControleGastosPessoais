@@ -1,6 +1,11 @@
-﻿<MudAppBar>
+﻿@inject NavigationManager NavigationManager
+@inject IAuthService AuthService
+
+<MudAppBar>
     <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
     Controle de Gastos
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.ExitToApp" Color="Color.Inherit" OnClick="@LogoutAsync" title="sair"/>
 </MudAppBar>
 <MudDrawer @bind-Open="@_open" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="@DrawerVariant.Mini">
     <MudNavMenu>
@@ -16,5 +21,11 @@
     private void ToggleDrawer()
     {
         _open = !_open;
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.Logout();
+        NavigationManager.NavigateTo("/", forceLoad: true);
     }
 }

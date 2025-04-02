@@ -1,11 +1,22 @@
-﻿<CascadingAuthenticationState>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using ControleGastosPessoais.Client.Pages
+@inject NavigationManager Nav
+
+<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                <NotAuthorized>
-                    <RedirectToLogin />
-                </NotAuthorized>
-            </AuthorizeRouteView>
+            @if (RequiresAuthorization(routeData.PageType))
+            {
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized>
+                        <RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            }
+            else
+            {
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            }
         </Found>
         <NotFound>
             <LayoutView Layout="@typeof(MainLayout)">
@@ -14,3 +25,10 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    private static bool RequiresAuthorization(Type pageType)
+    {
+        return Attribute.IsDefined(pageType, typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute));
+    }
+}

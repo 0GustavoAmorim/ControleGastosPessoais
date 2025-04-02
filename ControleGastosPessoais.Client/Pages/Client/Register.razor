@@ -1,43 +1,55 @@
 ﻿@page "/register"
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
-<h1>Register</h1>
 
-@if (ShowErrors)
-{
-    <div class="alert alert-danger" role="alert">
-        @foreach (var error in Errors)
+<PageTitle>Register</PageTitle>
+
+<link href="css/register.css" rel="stylesheet" />
+
+<video autoplay loop muted playsinline class="background-video">
+    <source src="videos/background.mp4" type="video/mp4" />
+</video>
+<div class="video-overlay"></div>
+
+<div class="register-wrapper">
+    <div class="register-card">
+        <button class="btn-voltar" @onclick="@(() => NavigationManager.NavigateTo("/"))">← Voltar</button>
+
+        <h1 class="register-title">Criar Conta</h1>
+
+        @if (ShowErrors)
         {
-            <p>@error</p>
+            <div class="alert alert-danger" role="alert">
+                @foreach (var error in Errors)
+                {
+                    <p>@error</p>
+                }
+            </div>
         }
-    </div>
-}
 
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">Please enter your details</h5>
         <EditForm Model="RegisterModel" OnValidSubmit="HandleRegistration">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
             <div class="form-group">
-                <label for="email">Email address</label>
-                <InputText Id="email" class="form-control" @bind-Value="RegisterModel.Email" />
+                <label for="email">Email</label>
+                <InputText Id="email" class="form-control input-glow" @bind-Value="RegisterModel.Email" />
                 <ValidationMessage For="@(() => RegisterModel.Email)" />
             </div>
+
             <div class="form-group">
-                <label for="password">Password</label>
-                <InputText Id="password" type="password" class="form-control"
-                           @bind-Value="RegisterModel.Password" />
+                <label for="password">Senha</label>
+                <InputText Id="password" type="password" class="form-control input-glow" @bind-Value="RegisterModel.Password" />
                 <ValidationMessage For="@(() => RegisterModel.Password)" />
             </div>
+
             <div class="form-group">
-                <label for="password">Confirm Password</label>
-                <InputText Id="password" type="password" class="form-control"
-                           @bind-Value="RegisterModel.ConfirmPassword" />
+                <label for="confirm-password">Confirmar Senha</label>
+                <InputText Id="confirm-password" type="password" class="form-control input-glow" @bind-Value="RegisterModel.ConfirmPassword" />
                 <ValidationMessage For="@(() => RegisterModel.ConfirmPassword)" />
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+
+            <button type="submit" class="btn-neon">Registrar</button>
         </EditForm>
     </div>
 </div>

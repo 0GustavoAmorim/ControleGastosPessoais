@@ -1,29 +1,70 @@
 ﻿@page "/"
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthProvider
-@using Microsoft.AspNetCore.Components.Authorization
 
-<AuthorizeView>
-    <Authorized>
-        @code {
-            protected override async Task OnInitializedAsync()
-            {
-                Nav.NavigateTo("/home");
-            }
-        }
-    </Authorized>
-</AuthorizeView>
 
 <PageTitle>Bem-vindo!</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large">
-    <MudText Typo="Typo.h3" Align="Align.Center">Controle seus gastos de forma inteligente</MudText>
-    <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2 mb-6">
-        Com o nosso app, você pode registrar suas despesas, visualizar dashboards e melhorar sua saúde financeira.
-    </MudText>
+<link href="css/landing.css" rel="stylesheet" />
 
-    <div class="d-flex justify-center">
-        <MudButton Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/login"))">Entrar</MudButton>
-        <MudButton Color="Color.Secondary" Class="ml-4" OnClick="@(() => Nav.NavigateTo("/register"))">Cadastrar</MudButton>
-    </div>
+<!-- VÍDEO DE FUNDO -->
+<video autoplay loop muted playsinline class="background-video">
+    <source src="videos/background.mp4" type="video/mp4" />
+    Seu navegador não suporta vídeo HTML5.
+</video>
+
+<!-- SOBREPOSIÇÃO COM COR -->
+<div class="video-overlay"></div>
+
+<!-- NAVBAR -->
+<MudAppBar Elevation="0" Color="Color.Transparent">
+    <MudText Typo="Typo.h6" Class="ml-4 d-flex align-center text-white">
+        FinançasFáceis
+    </MudText>
+</MudAppBar>
+
+<!-- CONTEÚDO COM ANIMAÇÕES -->
+<MudContainer MaxWidth="MaxWidth.False" Class="landing-wrapper text-white">
+    <MudGrid GutterSize="GutterSize.Large" Class="w-100">
+        <!-- ILUSTRAÇÃO -->
+        <MudItem xs="12" md="6" Class="d-flex justify-center align-center">
+            <MudFade In="true" Timeout="600">
+                <img src="undraw_projections_fhch.svg" alt="Ilustração Financeira" class="img-fluid" style="max-height: 400px;" />
+            </MudFade>
+        </MudItem>
+
+        <!-- TEXTO + BOTÕES -->
+        <MudItem xs="12" md="6" Class="d-flex flex-column justify-center align-center text-center px-6">
+            <MudSlide In="true" Direction="Direction.Bottom" Timeout="700">
+                <div>
+                    <MudText Typo="Typo.h3" Class="mb-2">Controle seus gastos de forma inteligente</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mb-6 max-w-500">
+                        Com o nosso app, você pode registrar suas despesas, visualizar dashboards e melhorar sua saúde financeira.
+                    </MudText>
+
+                    <div class="d-flex flex-wrap justify-center">
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" OnClick="@(() => Nav.NavigateTo("/login"))">
+                            Entrar
+                        </MudButton>
+                        <MudButton Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Large" Class="ml-4 mt-2 mt-md-0" OnClick="@(() => Nav.NavigateTo("/register"))">
+                            Cadastrar
+                        </MudButton>
+                    </div>
+                </div>
+            </MudSlide>
+        </MudItem>
+    </MudGrid>
 </MudContainer>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            Nav.NavigateTo("/home", forceLoad: true);
+        }
+    }
+}

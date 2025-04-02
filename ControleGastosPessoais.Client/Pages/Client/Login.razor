@@ -1,40 +1,58 @@
 ﻿@page "/login"
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
-<h1>Login</h1>
 
-@if (ShowErrors)
-{
-    <div class="alert alert-danger" role="alert">
-        <p>@Error</p>
-    </div>
-}
+<PageTitle>Login</PageTitle>
 
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">Please enter your details</h5>
+<link href="css/login.css" rel="stylesheet" />
+
+<video autoplay loop muted playsinline class="background-video">
+    <source src="videos/background.mp4" type="video/mp4" />
+</video>
+<div class="video-overlay"></div>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <button class="btn-voltar" @onclick="@(() => NavigationManager.NavigateTo("/"))">← Voltar</button>
+
+        <h1 class="login-title">Login</h1>
+
+@*         @if (ShowErrors)
+        {
+            <div class="alert alert-danger" role="alert">
+                <p>@Error</p>
+            </div>
+        } *@
+
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Elevation="0" Class="my-2">
+                @Error
+            </MudAlert>
+        }
+
         <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
             <div class="form-group">
-                <label for="email">Email address</label>
-                <InputText Id="email" Class="form-control" @bind-Value="loginModel.Email" />
+                <label for="email">Email</label>
+                <InputText Id="email" class="form-control input-glow" @bind-Value="loginModel.Email" />
                 <ValidationMessage For="@(() => loginModel.Email)" />
             </div>
+
             <div class="form-group">
-                <label for="password">Password</label>
-                <InputText Id="password" type="password" Class="form-control"
-                           @bind-Value="loginModel.Password" />
+                <label for="password">Senha</label>
+                <InputText Id="password" type="password" class="form-control input-glow" @bind-Value="loginModel.Password" />
                 <ValidationMessage For="@(() => loginModel.Password)" />
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+
+            <button type="submit" class="btn-neon">Entrar</button>
         </EditForm>
     </div>
 </div>
 
 @code {
-
     private LoginModel loginModel = new LoginModel();
     private bool ShowErrors;
     private string Error = "";
@@ -51,7 +69,7 @@
         }
         else
         {
-            Error = result.Error;
+            Error = result.Error ?? "Erro ao realizar login";
             ShowErrors = true;
         }
     }
