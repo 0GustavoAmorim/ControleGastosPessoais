@@ -1,0 +1,106 @@
+﻿.background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    min-width: 100vw;
+    min-height: 100vh;
+    object-fit: cover;
+    z-index: -2;
+}
+
+.video-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 30, 0.6);
+    z-index: -1;
+}
+
+.register-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.register-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.15);
+    color: #ffffff;
+    max-width: 420px;
+    width: 100%;
+    padding: 2.5rem 2rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Título */
+.register-title {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+/* Botão voltar */
+.btn-voltar {
+    background: none;
+    border: none;
+    color: #00ffff;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+/* Inputs com brilho */
+.input-glow {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid #00ffff;
+    border-radius: 10px;
+    padding: 10px;
+    width: 100%;
+}
+
+    .input-glow:focus {
+        outline: none;
+        box-shadow: 0 0 8px #00ffff;
+        border-color: #00ffff;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    margin-bottom: 0.3rem;
+    display: block;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+/* Botão neon */
+.btn-neon {
+    width: 100%;
+    background-color: #00ffff;
+    color: #0a0a1e;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+    .btn-neon:hover {
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.7), 0 0 30px rgba(0, 255, 255, 0.4);
+        transform: scale(1.02);
+    }

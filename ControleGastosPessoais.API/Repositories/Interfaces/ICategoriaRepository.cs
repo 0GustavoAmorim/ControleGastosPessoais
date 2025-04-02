@@ -4,13 +4,13 @@ namespace ControleGastosPessoais.API.Repositories.Interfaces
 {
     public interface ICategoriaRepository
     {
-        Task<List<CategoriaResponseDTO>> GetCategorias();
-        Task<CategoriaResponseDTO> GetCategoriaById(int id);
-        Task AddCategoria(CategoriaRequestDTO categoria);
-        Task<bool> UpdateCategoria(int id, CategoriaRequestDTO categoria);
-        Task<bool> UpdateGastosCategoria(int categoriaId, int novaCategoriaId);
-        Task<bool> DeleteCategoria(int id);
-        Task<bool> VerificarGastosCategoria(int id);
+        Task<List<CategoriaResponseDTO>> GetCategorias(string userId);
+        Task<CategoriaResponseDTO> GetCategoriaById(int id, string userId);
+        Task AddCategoria(CategoriaRequestDTO categoria, string userId);
+        Task<bool> UpdateCategoria(int id, CategoriaRequestDTO categoria, string userId);
+        Task<bool> UpdateGastosCategoria(int categoriaId, int novaCategoriaId, string userId);
+        Task<bool> DeleteCategoria(int id, string userId);
+        Task<bool> VerificarGastosCategoria(int id, string userId);
     }
 }
 
