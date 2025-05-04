@@ -19,7 +19,7 @@
         <MudItem xs="6">
             <MudSelect @bind-Value="novoGasto.CategoriaId" Label="Categoria" Class="mt-3" Placeholder="Selecione a Categoria" AdornmentIcon="fa-solid fa-bookmark">
                 <MudSelectItem Value="0">Selecione uma categoria</MudSelectItem>
-                @foreach (var categoria in categorias.Where(c => c.Id != 1)) // Ocultamos a categoria 1
+                @foreach (var categoria in categorias.Where(c => c.Id != 1))
                 {
                     <MudSelectItem Value="@categoria.Id">@categoria.Nome</MudSelectItem>
                 }

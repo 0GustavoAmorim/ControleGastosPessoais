@@ -1,8 +1,540 @@
 ﻿@page "/home"
 @attribute [Authorize]
+@inject DashboardService DashboardService
+@inject ISnackbar Snackbar
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>Dashboard de Gastos</PageTitle>
 
-<h1>Em Desenvolvimento</h1>
+<MudGrid Spacing="3">
+    <!-- Indicadores principais -->
+    <MudItem xs="12">
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="3" Style="height: 100%;">
+                    <MudText Typo="Typo.h6" Align="Align.Center">Gasto Total</MudText>
+                    <MudDivider Class="my-2" />
+                    <MudText Typo="Typo.h3" Align="Align.Center" Class="mt-3">R$ @GastoTotal.ToString("N2")</MudText>
+                </MudPaper>
+            </MudItem>
 
-Aqui ficará o dash das finanças
+            <MudItem xs="12">
+                <MudPaper Class="pa-4" Elevation="3" Style="height: 100%;">
+                    <MudText Typo="Typo.h6" Align="Align.Center">Gasto Mensal (@DateTime.Now.ToString("MMM/yyyy"))</MudText>
+                    <MudDivider Class="my-2" />
+                    <MudText Typo="Typo.h3" Align="Align.Center" Class="mt-3">R$ @GastoMensal.ToString("N2")</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+
+    <!-- Gráficos de pizza lado a lado -->
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4" Elevation="3" Style="height: 100%;">
+            <MudText Typo="Typo.h6" Align="Align.Center">Gasto por Categoria Geral</MudText>
+            <MudDivider Class="my-2" />
+
+            <!-- Seção do gráfico de pizza -->
+            <div class="d-flex justify-center">
+                <MudChart ChartType="ChartType.Pie"
+                          InputData="@seriesGeral"
+                          InputLabels="@labelsGeral"
+                          Width="300px"
+                          Height="300px"
+                          @bind-SelectedIndex="indexGeral" />
+            </div>
+
+            <MudText Typo="Typo.subtitle2" Align="Align.Center">
+                @if (indexGeral >= 0 && indexGeral < labelsGeral.Length)
+                {
+                    <span>@labelsGeral[indexGeral]: R$ @seriesGeral[indexGeral].ToString("N2")</span>
+                }
+                else
+                {
+                    <span>Clique em uma fatia para ver detalhes</span>
+                }
+            </MudText>
+
+            <!-- Mini-tabela com todos os valores -->
+            <MudSimpleTable Dense="true" Hover="true" Class="mt-3" Style="max-height: 200px; overflow-y: auto;">
+                <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th style="text-align: right;">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < labelsGeral.Length; i++)
+                    {
+                        var idx = i;
+                        <tr style="@(idx == indexGeral ? "background-color: rgba(0,0,0,0.1)" : "")">
+                            <td>
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background-color: @GetColorForIndex(idx); display: inline-block; margin-right: 8px;"></div>
+                                @labelsGeral[idx]
+                            </td>
+                            <td style="text-align: right;">R$ @seriesGeral[idx].ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4" Elevation="3" Style="height: 100%;">
+            <MudText Typo="Typo.h6" Align="Align.Center">Gastos por Categoria do Período (@GetPeriodoTexto())</MudText>
+            <MudDivider Class="my-2" />
+
+            <!-- Seção do gráfico de pizza -->
+            <div class="d-flex justify-center">
+                <MudChart ChartType="ChartType.Pie"
+                          InputData="@seriesPeriodo"
+                          InputLabels="@labelsPeriodo"
+                          Width="300px"
+                          Height="300px"
+                          @bind-SelectedIndex="indexPeriodo" />
+            </div>
+
+            <MudText Typo="Typo.subtitle2" Align="Align.Center">
+                @if (indexPeriodo >= 0 && indexPeriodo < labelsPeriodo.Length)
+                {
+                    <span>@labelsPeriodo[indexPeriodo]: R$ @seriesPeriodo[indexPeriodo].ToString("N2")</span>
+                }
+                else
+                {
+                    <span>Clique em uma fatia para ver detalhes</span>
+                }
+            </MudText>
+
+            <!-- Mini-tabela com todos os valores -->
+            <MudSimpleTable Dense="true" Hover="true" Class="mt-3" Style="max-height: 200px; overflow-y: auto;">
+                <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th style="text-align: right;">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < labelsPeriodo.Length; i++)
+                    {
+                        var idx = i;
+                        <tr style="@(idx == indexPeriodo ? "background-color: rgba(0,0,0,0.1)" : "")">
+                            <td>
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background-color: @GetColorForIndex(idx); display: inline-block; margin-right: 8px;"></div>
+                                @labelsPeriodo[idx]
+                            </td>
+                            <td style="text-align: right;">R$ @seriesPeriodo[idx].ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        </MudPaper>
+    </MudItem>
+
+    <!-- Gráfico de barras empilhadas -->
+    <MudItem xs="12">
+        <MudPaper Class="pa-4" Elevation="3">
+            <MudGrid>
+                <MudItem xs="12" Class="d-flex justify-space-between align-center">
+                    <MudText Typo="Typo.h6">Gastos Mensais por Categoria</MudText>
+                    <div class="d-flex align-center">
+                        <MudText Typo="Typo.body1" Class="mr-2">Ano:</MudText>
+                        <MudSelect T="int"
+                                   @bind-Value="anoSelecionado"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Style="width: 100px;"
+                                   Class="ml-2 mr-2"
+                                   AnchorOrigin="Origin.BottomCenter">
+                            @foreach (var ano in anosDisponiveis)
+                            {
+                                <MudSelectItem Value="@ano">@ano</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                       Size="Size.Small"
+                                       Color="Color.Primary"
+                                       OnClick="CarregarDadosPorAno"
+                                       Title="Atualizar dados" />
+                    </div>
+                </MudItem>
+            </MudGrid>
+            <MudDivider Class="my-2" />
+
+            <!-- Gráfico de barras empilhadas -->
+            @if (chartSeries.Count > 0 && mesesLabels.Length > 0)
+            {
+                <MudChart ChartType="ChartType.StackedBar"
+                          ChartSeries="@chartSeries"
+                          XAxisLabels="@mesesLabels"
+                          Width="100%" Height="350px" />
+
+                <!-- Legenda interativa -->
+                <div class="d-flex flex-wrap justify-center mt-4">
+                    @for (int i = 0; i < chartSeries.Count; i++)
+                    {
+                        var idx = i;
+                        <MudTooltip Text="Clique para ver detalhes">
+                            <MudButton Size="Size.Small"
+                                       Style="@($"background-color: {GetColorForIndex(idx)}; color: white; margin: 4px;")"
+                                       OnClick="@(() => MostrarDetalhesCategoria(idx))">
+                                @chartSeries[idx].Name
+                            </MudButton>
+                        </MudTooltip>
+                    }
+                </div>
+
+                <!-- Detalhes da categoria selecionada -->
+                @if (categoriaSelecionada >= 0 && categoriaSelecionada < chartSeries.Count)
+                {
+                    <MudCard Class="mt-3" Outlined="true">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.h6">Detalhes de @chartSeries[categoriaSelecionada].Name</MudText>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudSimpleTable Dense="true" Hover="true">
+                                <thead>
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th style="text-align: right;">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < mesesLabels.Length; i++)
+                                    {
+                                        var idx = i;
+                                        <tr>
+                                            <td>@mesesLabels[idx]</td>
+                                            <td style="text-align: right;">R$ @chartSeries[categoriaSelecionada].Data[idx].ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Class="my-4">Não há dados para exibir no ano selecionado.</MudAlert>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    #region Variáveis
+
+    // Dados gerais
+    private decimal GastoTotal;
+    private decimal GastoMensal;
+    private decimal GastoPerso;
+    private DateTime? dataInicio = DateTime.Now.AddMonths(-1);
+    private DateTime? dataFim = DateTime.Now;
+    private int anoSelecionado = DateTime.Now.Year;
+    private List<int> anosDisponiveis = new() { DateTime.Now.Year, DateTime.Now.Year - 1, DateTime.Now.Year - 2 };
+
+    // Gráfico de gastos por categoria geral
+    private string[] labelsGeral = Array.Empty<string>();
+    private double[] seriesGeral = Array.Empty<double>();
+    private int indexGeral = -1;
+
+    // Gráfico de gastos por categoria do período (mensal ou personalizado)
+    private string[] labelsPeriodo = Array.Empty<string>();
+    private double[] seriesPeriodo = Array.Empty<double>();
+    private int indexPeriodo = -1;
+    private bool isPeriodoMensal = true; // true = mensal, false = personalizado
+
+    // Gráfico de barras empilhadas
+    private List<ChartSeries> chartSeries = new();
+    private string[] mesesLabels = Array.Empty<string>();
+    private int categoriaSelecionada = -1;
+
+    // Constantes
+    private readonly string[] nomesMeses = {
+        "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+        "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+    };
+
+    private readonly string[] coresPadrao = {
+        "#1E88E5", "#00ACC1", "#5E35B1", "#43A047",
+        "#FFB300", "#E53935", "#8E24AA", "#3949AB",
+        "#039BE5", "#00897B", "#7CB342", "#C0CA33"
+    };
+
+    #endregion
+
+    #region Ciclo de Vida
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Carregar indicadores
+        await CarregaGastoTotalAsync();
+        await CarregaGastoMensalAsync();
+
+        // Inicializar valores de data
+        if (!dataInicio.HasValue)
+            dataInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        if (!dataFim.HasValue)
+            dataFim = DateTime.Now;
+
+        // await CarregaGastoPersoAsync();
+
+        // Carregar dados para gráficos
+        await CarregarGastoPorCategoriaGeralAsync();
+        await CarregarGastoPorCategoriaMensalAsync();
+        await CarregaGastoCategoriaEmpilhadoAsync(anoSelecionado);
+    }
+
+    #endregion
+
+    #region Métodos de Utilidade
+
+    private string GetColorForIndex(int index)
+    {
+        if (index < 0 || coresPadrao.Length == 0)
+            return "#1E88E5"; // Cor padrão caso haja algum problema
+
+        return coresPadrao[index % coresPadrao.Length];
+    }
+
+    private void MostrarDetalhesCategoria(int index)
+    {
+        categoriaSelecionada = categoriaSelecionada == index ? -1 : index;
+    }
+
+    private string GetPeriodoTexto()
+    {
+        if (isPeriodoMensal)
+            return $"Mês Atual ({DateTime.Now:MMM/yyyy})";
+        else
+            return $"{dataInicio?.ToString("dd/MM/yyyy")} a {dataFim?.ToString("dd/MM/yyyy")}";
+    }
+
+    private string FormatarDataParaAPI(DateTime? data)
+    {
+        return data?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd");
+    }
+
+    #endregion
+
+    #region Métodos de Carregamento de Dados
+
+    // Indicadores
+    private async Task CarregaGastoTotalAsync()
+    {
+        try
+        {
+            var gastoTotal = await DashboardService.GetGastoTotal();
+            GastoTotal = gastoTotal?.Total ?? 0;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar gasto total: {ex.Message}", Severity.Error);
+            GastoTotal = 0;
+        }
+    }
+
+    private async Task CarregaGastoMensalAsync()
+    {
+        try
+        {
+            var gastoMensal = await DashboardService.GetGastoMensal();
+            GastoMensal = gastoMensal?.Total ?? 0;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar gasto mensal: {ex.Message}", Severity.Error);
+            GastoMensal = 0;
+        }
+    }
+
+    // private async Task CarregaGastoPersoAsync()
+    // {
+    //     try
+    //     {
+    //         if (dataInicio.HasValue && dataFim.HasValue)
+    //         {
+    //             var gastoPerso = await DashboardService.GetGastoPerso(dataInicio.Value, dataFim.Value);
+    //             GastoPerso = gastoPerso?.Total ?? 0;
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Snackbar.Add($"Erro ao carregar gasto personalizado: {ex.Message}", Severity.Error);
+    //         GastoPerso = 0;
+    //     }
+    // }
+
+    // Gráfico de pizza geral
+    private async Task CarregarGastoPorCategoriaGeralAsync()
+    {
+        try
+        {
+            var dados = await DashboardService.GetGastosPorCategoriaAsync();
+            if (dados != null && dados.Any())
+            {
+                labelsGeral = dados.Select(x => x.Categoria).ToArray();
+                seriesGeral = dados.Select(x => Math.Round((double)x.Total, 2)).ToArray();
+            }
+            else
+            {
+                labelsGeral = Array.Empty<string>();
+                seriesGeral = Array.Empty<double>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar gastos por categoria: {ex.Message}", Severity.Error);
+            labelsGeral = Array.Empty<string>();
+            seriesGeral = Array.Empty<double>();
+        }
+    }
+
+    // Gráfico de pizza do período
+    private async Task CarregarGastoPorCategoriaMensalAsync()
+    {
+        try
+        {
+            var dados = await DashboardService.GetGastoCategoriaMensal();
+            if (dados != null && dados.Any())
+            {
+                labelsPeriodo = dados.Select(x => x.Categoria).ToArray();
+                seriesPeriodo = dados.Select(x => Math.Round((double)x.Total, 2)).ToArray();
+                isPeriodoMensal = true;
+            }
+            else
+            {
+                labelsPeriodo = Array.Empty<string>();
+                seriesPeriodo = Array.Empty<double>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar gastos por categoria mensal: {ex.Message}", Severity.Error);
+            labelsPeriodo = Array.Empty<string>();
+            seriesPeriodo = Array.Empty<double>();
+        }
+    }
+
+    private async Task CarregarGastoPorCategoriaPersoAsync()
+    {
+        try
+        {
+            if (dataInicio.HasValue && dataFim.HasValue)
+            {
+                var dados = await DashboardService.GetGastoCategoriaPerso(dataInicio.Value, dataFim.Value);
+                if (dados != null && dados.Any())
+                {
+                    labelsPeriodo = dados.Select(x => x.Categoria).ToArray();
+                    seriesPeriodo = dados.Select(x => Math.Round((double)x.Total, 2)).ToArray();
+                    isPeriodoMensal = false;
+                }
+                else
+                {
+                    labelsPeriodo = Array.Empty<string>();
+                    seriesPeriodo = Array.Empty<double>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar gastos por categoria personalizados: {ex.Message}", Severity.Error);
+            labelsPeriodo = Array.Empty<string>();
+            seriesPeriodo = Array.Empty<double>();
+        }
+    }
+
+    // Gráfico de barras empilhadas
+    private async Task CarregaGastoCategoriaEmpilhadoAsync(int ano = 0)
+    {
+        try
+        {
+            var dadosMensais = await DashboardService.GetGastoCategoriaMensal(ano);
+
+            if (dadosMensais == null || !dadosMensais.Any())
+            {
+                chartSeries.Clear();
+                mesesLabels = Array.Empty<string>();
+                categoriaSelecionada = -1;
+                return;
+            }
+
+            var categorias = dadosMensais.Select(d => d.Categoria).Distinct().ToList();
+            var meses = dadosMensais.Select(d => d.Mes).Distinct().OrderBy(m => m).ToList();
+
+            mesesLabels = meses.Select(m =>
+            {
+                int index = Math.Min(m - 1, nomesMeses.Length - 1);
+                return index >= 0 ? nomesMeses[index] : $"Mês {m}";
+            }).ToArray();
+
+            chartSeries.Clear();
+
+            foreach (var categoria in categorias)
+            {
+                var dados = new double[meses.Count];
+
+                for (int i = 0; i < meses.Count; i++)
+                {
+                    var mes = meses[i];
+                    var gasto = dadosMensais.FirstOrDefault(d => d.Categoria == categoria && d.Mes == mes);
+
+                    if (gasto != null)
+                        dados[i] = Math.Round((double)gasto.Total, 2);
+                }
+                chartSeries.Add(new ChartSeries
+                    {
+                        Name = categoria,
+                        Data = dados
+                    });
+            }
+
+            categoriaSelecionada = -1;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar gastos por categoria mensais: {ex.Message}", Severity.Error);
+            chartSeries.Clear();
+            mesesLabels = Array.Empty<string>();
+        }
+    }
+
+    #endregion
+
+    #region Métodos de Ação do Usuário
+
+    private async Task CarregarDadosPorAno()
+    {
+        await CarregaGastoCategoriaEmpilhadoAsync(anoSelecionado);
+        StateHasChanged();
+    }
+
+    // private async Task CarregarDadosPersonalizados()
+    // {
+    //     if (!dataInicio.HasValue || !dataFim.HasValue)
+    //     {
+    //         Snackbar.Add("Por favor, selecione as datas de início e fim.", Severity.Warning);
+    //         return;
+    //     }
+
+    //     if (dataInicio > dataFim)
+    //     {
+    //         Snackbar.Add("A data de início não pode ser posterior à data de fim.", Severity.Warning);
+    //         return;
+    //     }
+
+    //     try
+    //     {
+    //         // await CarregaGastoPersoAsync();
+    //         await CarregarGastoPorCategoriaPersoAsync();
+    //         StateHasChanged();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Snackbar.Add($"Erro ao carregar dados personalizados: {ex.Message}", Severity.Error);
+    //     }
+    // }
+
+    #endregion
+}

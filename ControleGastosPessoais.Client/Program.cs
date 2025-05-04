@@ -41,5 +41,6 @@ builder.Services.AddScoped(sp =>
 // Serviços que usam o HttpClient
 builder.Services.AddScoped<GastosServices>();
 builder.Services.AddScoped<CategoriasService>();
+builder.Services.AddScoped<DashboardService>();
 
 await builder.Build().RunAsync();
