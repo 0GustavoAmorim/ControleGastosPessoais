@@ -32,4 +32,18 @@
     <script src="https://kit.fontawesome.com/e53cbac2e3.js" crossorigin="anonymous"></script>
 </body>
 
+<script>
+    window.downloadFileFromStream = async (fileName, contentStreamReference) => {
+        const arrayBuffer = await contentStreamReference.arrayBuffer();
+        const blob = new Blob([arrayBuffer]);
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = fileName ?? 'relatorio.xlsx';
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+    };
+</script>
+
 </html>

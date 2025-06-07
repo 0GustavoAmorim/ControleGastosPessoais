@@ -42,5 +42,8 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<GastosServices>();
 builder.Services.AddScoped<CategoriasService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<RelatorioService>();
+
+
 
 await builder.Build().RunAsync();

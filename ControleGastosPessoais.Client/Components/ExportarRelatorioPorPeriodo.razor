@@ -1,0 +1,45 @@
+﻿@inject RelatorioService RelatorioService
+@inject ISnackbar Snackbar
+@using MudBlazor
+
+<MudCard Class="pa-4">
+    <MudText Typo="Typo.h6">Exportar Relatório por Período</MudText>
+
+    <MudStack Spacing="2" Class="mt-2">
+        <MudDatePicker @bind-Date="_dataInicio" Label="Data Início" Required="true" />
+        <MudDatePicker @bind-Date="_dataFim" Label="Data Fim" Required="true" />
+        <MudButton Color="Color.Primary" OnClick="Exportar">
+            Exportar Excel
+        </MudButton>
+    </MudStack>
+</MudCard>
+
+@code {
+    private DateTime? _dataInicio = DateTime.Today.AddDays(-7);
+    private DateTime? _dataFim = DateTime.Today;
+
+    private async Task Exportar()
+    {
+        if (_dataInicio is null || _dataFim is null)
+        {
+            Snackbar.Add("Por favor, preencha ambas as datas.", Severity.Warning);
+            return;
+        }
+
+        if (_dataFim < _dataInicio)
+        {
+            Snackbar.Add("A data final deve ser posterior à data inicial.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            await RelatorioService.ExportarExcelPorPeriodo(_dataInicio.Value, _dataFim.Value);
+            Snackbar.Add("Relatório exportado com sucesso!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Erro ao exportar: " + ex.Message, Severity.Error);
+        }
+    }
+}
